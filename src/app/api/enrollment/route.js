@@ -26,7 +26,26 @@ export const GET = async (request) => {
   }
 
   //check if user provide one of 'studentId' or 'courseNo'
-  //User must not provide both values, and must not provide nothing
+  //User must not provide both values, and must not provide nothing NO1
+  if (studentId && courseNo) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "Please provide either studentId or courseNo and not both!",
+      },
+      { status: 400 }
+    );
+  }
+
+  if (!studentId && !courseNo) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "Please provide either studentId or courseNo and not both!",
+      },
+      { status: 400 }
+    );
+  }
 
   // return NextResponse.json(
   //   {
@@ -55,15 +74,22 @@ export const GET = async (request) => {
       ok: true,
       courses,
     });
-    //get all students enrolled by a course
+    //get all students enrolled by a course NO2
   } else if (courseNo) {
     const studentIdList = [];
     for (const enroll of DB.enrollments) {
       //your code here
+      if (enroll.courseNo === courseNo) {
+        studentIdList.push(enroll.studentId);
+      }
     }
 
     const students = [];
     //your code here
+    for (const studentId of studentIdList) {
+      const student = DB.students.find((x) => x.studentId === studentId);
+      students.push(student);
+    }
 
     return NextResponse.json({
       ok: true,
@@ -140,7 +166,19 @@ export const DELETE = async (request) => {
 
   const { studentId, courseNo } = body;
 
-  //check if studentId and courseNo exist on enrollment
+  //check if studentId and courseNo exist on enrollment NO3
+  const foundEnroll = DB.enrollments.find(
+    (x) => x.studentId === studentId && x.courseNo === courseNo
+  );
+  if (!foundEnroll) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "Enrollment does not exist",
+      },
+      { status: 404 }
+    );
+  }
 
   // return NextResponse.json(
   //   {
@@ -151,6 +189,9 @@ export const DELETE = async (request) => {
   // );
 
   //perform deletion by using splice or array filter
+  DB.enrollments = DB.enrollments.filter(
+    (x) => x.studentId !== studentId || x.courseNo !== courseNo
+  );
 
   //if code reach here it means deletion is complete
   return NextResponse.json({
